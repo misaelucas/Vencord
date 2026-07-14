@@ -16,13 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { app } from "electron";
+import { ORIGINAL_DISCORD_USER_DATA_DIR, ORIGINAL_DISCORD_USER_DATA_ROOT } from "@main/earlyStartup";
 import { join } from "path";
 
 export const DATA_DIR = process.env.VENCORD_USER_DATA_DIR ?? (
-    process.env.DISCORD_USER_DATA_DIR
-        ? join(process.env.DISCORD_USER_DATA_DIR, "..", "VencordData")
-        : join(app.getPath("userData"), "..", "Vencord")
+    // Use the pre-profile paths so Vencord configuration remains shared.
+    ORIGINAL_DISCORD_USER_DATA_ROOT
+        ? join(ORIGINAL_DISCORD_USER_DATA_ROOT, "..", "VencordData")
+        : join(ORIGINAL_DISCORD_USER_DATA_DIR, "..", "Vencord")
 );
 export const SETTINGS_DIR = join(DATA_DIR, "settings");
 export const THEMES_DIR = join(DATA_DIR, "themes");
