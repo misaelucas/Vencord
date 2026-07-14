@@ -36,6 +36,11 @@ export const enum IpcEvents {
     OPEN_THEMES_FOLDER = "VencordOpenThemesFolder",
     OPEN_SETTINGS_FOLDER = "VencordOpenSettingsFolder",
 
+    GET_DISCORD_PROFILES = "VencordGetDiscordProfiles",
+    CREATE_DISCORD_PROFILE = "VencordCreateDiscordProfile",
+    LAUNCH_DISCORD_PROFILE = "VencordLaunchDiscordProfile",
+    OPEN_DISCORD_PROFILE_FOLDER = "VencordOpenDiscordProfileFolder",
+
     GET_UPDATES = "VencordGetUpdates",
     GET_REPO = "VencordGetRepo",
     UPDATE = "VencordUpdate",

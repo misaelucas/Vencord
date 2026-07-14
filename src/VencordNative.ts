@@ -8,6 +8,7 @@ import type { Settings } from "@api/Settings";
 import type { CspRequestResult } from "@main/csp/manager";
 import type { PluginIpcMappings } from "@main/ipcPlugins";
 import type { UserThemeHeader } from "@main/themes";
+import type { DiscordProfileResult, DiscordProfilesState } from "@shared/DiscordProfiles";
 import { IpcEvents } from "@shared/IpcEvents";
 import type { IpcRes } from "@utils/types";
 import { ipcRenderer } from "electron/renderer";
@@ -31,6 +32,13 @@ for (const [plugin, methods] of Object.entries(pluginIpcMap)) {
 }
 
 export default {
+    discordProfiles: {
+        get: () => invoke<DiscordProfileResult<DiscordProfilesState>>(IpcEvents.GET_DISCORD_PROFILES),
+        create: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.CREATE_DISCORD_PROFILE, profile),
+        launch: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.LAUNCH_DISCORD_PROFILE, profile),
+        openFolder: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.OPEN_DISCORD_PROFILE_FOLDER, profile)
+    },
+
     themes: {
         uploadTheme: async (fileName: string, fileData: string): Promise<void> => {
             throw new Error("uploadTheme is WEB only");

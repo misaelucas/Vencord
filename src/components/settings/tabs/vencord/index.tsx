@@ -34,6 +34,7 @@ import { isPluginDev } from "@utils/misc";
 import { relaunch } from "@utils/native";
 import { ConfirmModal, Forms, openModal, React, useMemo, UserStore } from "@webpack/common";
 
+import { DiscordProfiles } from "./DiscordProfiles";
 import { DonateButtonComponent, isDonor } from "./DonateButton";
 import { MacOSVibrancySettings } from "./MacVibrancySettings";
 import { NotificationSection } from "./NotificationSettings";
@@ -235,6 +236,7 @@ function VencordSettings() {
                 <Switches />
             </section>
 
+            {IS_DISCORD_DESKTOP && <DiscordProfiles />}
 
             <MacOSVibrancySettings />
             <WindowsMaterialSettings />

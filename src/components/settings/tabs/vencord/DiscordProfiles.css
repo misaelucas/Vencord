@@ -1,0 +1,47 @@
+.vc-discord-profiles-controls {
+    margin-top: 12px;
+}
+
+.vc-discord-profiles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.vc-discord-profiles-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.vc-discord-profiles-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vc-discord-profiles-row-actions,
+.vc-discord-profiles-modal-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.vc-discord-profiles-modal-actions {
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+@media (width <= 520px) {
+    .vc-discord-profiles-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vc-discord-profiles-row-actions > button {
+        flex: 1;
+    }
+}

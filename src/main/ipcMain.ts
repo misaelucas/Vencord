@@ -17,6 +17,7 @@
 */
 
 import "./updater";
+import "./discordProfiles";
 import "./ipcPlugins";
 import "./settings";
 

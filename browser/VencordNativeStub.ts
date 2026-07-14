@@ -41,6 +41,13 @@ const themeStore = DataStore.createStore("VencordThemes", "VencordThemeData");
 
 // probably should make this less cursed at some point
 window.VencordNative = {
+    discordProfiles: {
+        get: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
+        create: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
+        launch: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
+        openFolder: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } })
+    },
+
     themes: {
         uploadTheme: (fileName: string, fileData: string) => DataStore.set(fileName, fileData, themeStore),
         deleteTheme: (fileName: string) => DataStore.del(fileName, themeStore),
