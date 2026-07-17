@@ -16,15 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { ORIGINAL_DISCORD_USER_DATA_DIR, ORIGINAL_DISCORD_USER_DATA_ROOT } from "@main/earlyStartup";
+import { SHARED_VENCORD_DATA_DIR } from "@main/earlyStartup";
 import { join } from "path";
 
-export const DATA_DIR = process.env.VENCORD_USER_DATA_DIR ?? (
-    // Use the pre-profile paths so Vencord configuration remains shared.
-    ORIGINAL_DISCORD_USER_DATA_ROOT
-        ? join(ORIGINAL_DISCORD_USER_DATA_ROOT, "..", "VencordData")
-        : join(ORIGINAL_DISCORD_USER_DATA_DIR, "..", "Vencord")
-);
+// Use the pre-profile path so Vencord configuration remains shared.
+export const DATA_DIR = SHARED_VENCORD_DATA_DIR;
 export const SETTINGS_DIR = join(DATA_DIR, "settings");
 export const THEMES_DIR = join(DATA_DIR, "themes");
 export const QUICK_CSS_PATH = join(SETTINGS_DIR, "quickCss.css");

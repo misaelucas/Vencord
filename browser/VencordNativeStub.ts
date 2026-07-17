@@ -45,7 +45,8 @@ window.VencordNative = {
         get: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
         create: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
         launch: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
-        openFolder: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } })
+        openFolder: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } }),
+        openPicker: async () => ({ ok: false, error: { code: "UNSUPPORTED", message: "Discord profiles are only available in Discord Desktop." } })
     },
 
     themes: {

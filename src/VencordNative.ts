@@ -36,7 +36,8 @@ export default {
         get: () => invoke<DiscordProfileResult<DiscordProfilesState>>(IpcEvents.GET_DISCORD_PROFILES),
         create: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.CREATE_DISCORD_PROFILE, profile),
         launch: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.LAUNCH_DISCORD_PROFILE, profile),
-        openFolder: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.OPEN_DISCORD_PROFILE_FOLDER, profile)
+        openFolder: (profile: string) => invoke<DiscordProfileResult>(IpcEvents.OPEN_DISCORD_PROFILE_FOLDER, profile),
+        openPicker: () => invoke<DiscordProfileResult>(IpcEvents.OPEN_DISCORD_PROFILE_PICKER)
     },
 
     themes: {

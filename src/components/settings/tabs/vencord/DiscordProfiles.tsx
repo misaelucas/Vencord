@@ -128,6 +128,19 @@ export function DiscordProfiles() {
         if (!result.ok) setError(result.error.message);
     }
 
+    async function openProfilePicker() {
+        setError(void 0);
+        setBusyAction("picker");
+        const result = await VencordNative.discordProfiles.openPicker();
+        setBusyAction(void 0);
+
+        if (result.ok) {
+            showToast("Opening Discord profile chooser…");
+        } else {
+            setError(result.error.message);
+        }
+    }
+
     const profiles = profilesState?.profiles ?? [];
     const currentProfile = profilesState?.currentProfile ?? null;
 
@@ -158,6 +171,13 @@ export function DiscordProfiles() {
                     ))}
                 >
                     Create Profile
+                </Button>
+                <Button
+                    disabled={busyAction != null}
+                    onClick={openProfilePicker}
+                    variant="secondary"
+                >
+                    {busyAction === "picker" ? "Opening…" : "Open Profile Chooser"}
                 </Button>
             </div>
 

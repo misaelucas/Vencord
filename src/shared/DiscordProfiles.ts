@@ -47,6 +47,7 @@ export type DiscordProfileErrorCode =
     | "CREATE_FAILED"
     | "LAUNCH_FAILED"
     | "OPEN_FOLDER_FAILED"
+    | "OPEN_PICKER_FAILED"
     | "UNSUPPORTED";
 
 export type DiscordProfileResult<T = void> =

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'sha256-0PF3z/1//5wuVa1OFZtWPFDu9vrvt+pZ28E8JysIDqc='; style-src 'sha256-1AkjfYwDoR55CHANR9aoFE52rYoPCvj9flpjAzbF9Yc='; base-uri 'none'; form-action 'none'"
+    >
+    <meta name="color-scheme" content="dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Discord Profiles</title>
+    <style>
+        :root {
+            color: #f2f3f5;
+            background: #111214;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at top, rgb(88 101 242 / 18%), transparent 42%),
+                #111214;
+        }
+
+        main {
+            width: min(680px, calc(100vw - 48px));
+            padding: 38px 0 30px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(26px, 5vw, 38px);
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin: 10px 0 28px;
+            color: #b5bac1;
+            font-size: 14px;
+        }
+
+        .profiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+            gap: 16px;
+            min-height: 154px;
+        }
+
+        .profile-card {
+            min-height: 150px;
+            padding: 18px 12px 16px;
+            border: 1px solid #35373c;
+            border-radius: 16px;
+            color: #f2f3f5;
+            background: #1e1f22;
+            cursor: pointer;
+            transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+        }
+
+        .profile-card:hover {
+            border-color: #7c83ff;
+            background: #26272b;
+            transform: translateY(-2px);
+        }
+
+        .profile-card:focus-visible,
+        .footer-action:focus-visible {
+            outline: 3px solid #aeb2ff;
+            outline-offset: 3px;
+        }
+
+        .profile-card:disabled,
+        .footer-action:disabled {
+            cursor: wait;
+            opacity: 0.55;
+            transform: none;
+        }
+
+        .profile-icon {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 14px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: white;
+            background: hsl(var(--profile-hue) 62% 48%);
+            box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%);
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .profile-name {
+            display: block;
+            overflow: hidden;
+            font-size: 15px;
+            font-weight: 600;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-action {
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 6px;
+            color: #b5bac1;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-size: 14px;
+        }
+
+        .footer-action:hover {
+            color: white;
+            background: #2b2d31;
+        }
+
+        .error {
+            min-height: 20px;
+            margin: 18px 0 0;
+            color: #fa777c;
+            font-size: 13px;
+        }
+
+        .loading {
+            grid-column: 1 / -1;
+            align-self: center;
+            color: #b5bac1;
+        }
+
+        @media (width <= 540px) {
+            main {
+                width: min(360px, calc(100vw - 32px));
+                padding-top: 28px;
+            }
+
+            .profiles {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Who is using Discord?</h1>
+        <p class="subtitle">Choose a local profile to continue.</p>
+        <div class="profiles" id="profiles" aria-live="polite">
+            <span class="loading">Loading profiles…</span>
+        </div>
+        <p class="error" id="error" role="alert"></p>
+        <div class="footer">
+            <button class="footer-action" id="manage" type="button">Open Discord Settings</button>
+            <button class="footer-action" id="quit" type="button">Quit</button>
+        </div>
+    </main>
+    <script>
+        (() => {
+            const api = window.VencordProfilePicker;
+            const profilesElement = document.getElementById("profiles");
+            const errorElement = document.getElementById("error");
+            const manageButton = document.getElementById("manage");
+            const quitButton = document.getElementById("quit");
+            let launching = false;
+
+            const setError = message => errorElement.textContent = message ?? "";
+            const setLaunching = value => {
+                launching = value;
+                document.querySelectorAll("button").forEach(button => button.disabled = value);
+            };
+            const profileHue = name => {
+                let hash = 0;
+                for (const character of name) hash = ((hash * 31) + character.charCodeAt(0)) >>> 0;
+                return hash % 360;
+            };
+
+            const launch = async action => {
+                if (launching) return;
+                setLaunching(true);
+                setError("");
+
+                try {
+                    const result = await action();
+                    if (!result.ok) {
+                        setLaunching(false);
+                        setError(result.error);
+                    }
+                } catch {
+                    setLaunching(false);
+                    setError("Could not communicate with the profile chooser. Please try again.");
+                }
+            };
+
+            const createProfileCard = (name, profile) => {
+                const button = document.createElement("button");
+                button.className = "profile-card";
+                button.type = "button";
+                button.title = `Open ${name}`;
+                button.style.setProperty("--profile-hue", profileHue(name));
+                button.addEventListener("click", () => launch(() => api.selectProfile(profile)));
+
+                const icon = document.createElement("span");
+                icon.className = "profile-icon";
+                icon.textContent = name.slice(0, 1).toUpperCase();
+
+                const label = document.createElement("span");
+                label.className = "profile-name";
+                label.textContent = name;
+
+                button.append(icon, label);
+                return button;
+            };
+
+            const renderProfiles = profiles => {
+                profilesElement.replaceChildren(
+                    createProfileCard("Default", null),
+                    ...profiles.map(profile => createProfileCard(profile, profile))
+                );
+                profilesElement.querySelector("button")?.focus();
+            };
+
+            manageButton.addEventListener("click", () => launch(() => api.openManager()));
+            quitButton.addEventListener("click", () => {
+                if (!launching) void api.quit();
+            });
+
+            document.addEventListener("keydown", event => {
+                if (event.key === "Escape" && !launching) {
+                    event.preventDefault();
+                    void api.quit();
+                    return;
+                }
+
+                if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+
+                const cards = [...profilesElement.querySelectorAll(".profile-card")];
+                if (cards.length === 0) return;
+
+                const currentIndex = Math.max(0, cards.indexOf(document.activeElement));
+                const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
+                const nextIndex = event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                        ? cards.length - 1
+                        : (currentIndex + direction + cards.length) % cards.length;
+
+                event.preventDefault();
+                cards[nextIndex].focus();
+            });
+
+            void api.listProfiles().then(result => {
+                if (result.ok) {
+                    renderProfiles(result.value);
+                } else {
+                    renderProfiles([]);
+                    setError(result.error);
+                }
+            }).catch(() => {
+                renderProfiles([]);
+                setError("Could not load Discord profiles.");
+            });
+        })();
+    </script>
+</body>
+</html>

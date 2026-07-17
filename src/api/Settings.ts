@@ -45,6 +45,7 @@ export interface Settings {
     enabledThemes: string[];
     enableReactDevtools: boolean;
     multiInstance: boolean;
+    showProfilePickerOnStartup: boolean;
     themeLinks: string[];
     frameless: boolean;
     transparent: boolean;
@@ -102,6 +103,7 @@ const DefaultSettings: Settings = {
     enabledThemes: [],
     enableReactDevtools: false,
     multiInstance: false,
+    showProfilePickerOnStartup: false,
     frameless: false,
     transparent: false,
     winCtrlQ: false,

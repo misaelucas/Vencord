@@ -17,6 +17,7 @@ This project extends [Vencord](https://github.com/Vendicated/Vencord) with persi
 ## Features
 
 * Create isolated Discord profiles from Vencord Settings
+* Optionally choose a profile before Discord starts
 * Run multiple Discord accounts simultaneously
 * Preserve each profile’s login between restarts
 * Launch profiles without terminal commands
@@ -82,6 +83,24 @@ _
 
 Names are limited to 64 characters. Paths and traversal sequences such as `../profile` are rejected.
 
+## Startup Profile Chooser
+
+The optional startup chooser runs in a small standalone Electron window before Discord's original application, login screen, renderer, Vencord plugins, or themes are loaded.
+
+<!-- Add a screenshot or GIF of the startup chooser listing Default, Personal, and Work. -->
+
+Enable it from:
+
+```text
+User Settings → Vencord → Show profile chooser on startup
+```
+
+Restart Discord after changing the setting. A normal Discord launch will then offer `Default` and every valid isolated profile. Explicit `--vencord-profile` and `--multi-instance` launches continue directly without showing the chooser.
+
+The profile manager also provides an `Open Profile Chooser` button for testing or reopening it manually. The chooser uses a separate Vencord-owned Electron data directory and single-instance lock, so it does not compete with Default or isolated Discord processes.
+
+Profile icons are deterministic local initials. The chooser does not inspect Discord account data, tokens, cookies, usernames, user IDs, or avatars.
+
 ## Command-line usage
 
 Profiles can also be launched directly:
@@ -129,9 +148,19 @@ Contains profile argument parsing, validation, deterministic path derivation, di
 
 ```text
 src/main/discordProfiles.ts
+src/main/discordProfileOperations.ts
 ```
 
-Implements profile discovery, creation, process launching, folder opening, and narrowly scoped IPC handlers.
+Implements profile discovery, creation, shared process launching, folder opening, and narrowly scoped IPC handlers.
+
+```text
+src/main/profilePickerBootstrap.ts
+src/main/profilePickerMain.ts
+src/main/profilePickerPreload.ts
+src/main/profilePicker.html
+```
+
+Decides whether the normal runtime or isolated chooser should start, owns the chooser-only lock and window, and exposes its four-method sandboxed bridge.
 
 ```text
 src/shared/DiscordProfiles.ts
@@ -159,16 +188,18 @@ The profile manager:
 * Restricts discovery to the expected Discord profile parent
 * Returns profile names rather than filesystem paths through IPC
 * Sanitizes `DISCORD_USER_DATA_DIR` before launching another profile
+* Runs the chooser with sandboxing, context isolation, no Node integration, and a restrictive Content Security Policy
+* Does not load Discord's renderer, Vencord plugins, themes, or original `app.asar` while choosing
 
 Profile deletion is intentionally not included because reliably detecting whether a profile is currently running is not straightforward across all supported operating systems.
 
 ## Platform status
 
-| Platform     | Implementation | Manual validation |
-| ------------ | -------------: | ----------------: |
-| Debian Linux |      Supported |            Passed |
-| Windows      |    Implemented |           Pending |
-| macOS        |    Implemented |           Pending |
+| Platform     | Profile manager | Startup chooser validation |
+| ------------ | --------------: | -------------------------: |
+| Debian Linux |          Passed |                    Pending |
+| Windows      |     Implemented |                    Pending |
+| macOS        |     Implemented |                    Pending |
 
 The launcher uses Electron’s current executable path and Node’s cross-platform process APIs. No operating-system-specific Discord installation path is hardcoded.
 
@@ -203,6 +234,32 @@ pnpm inject
 
 Restart Discord after installation.
 
+### Surviving Discord updates on Linux
+
+Discord updates replace the injected `app.asar`. Install the user-level update guard once to route both terminal and application-menu launches through a stable launcher outside Discord's versioned installation directory:
+
+```bash
+pnpm installUpdateGuard
+pnpm repairDiscord
+```
+
+The guard checks the currently selected Discord version before every launch. When an update removes Vencord, it uses the cached development installer and current `dist` build to restore the injection, then forwards every original Discord argument unchanged. It checks again after Discord exits because Discord can install a clean version while running.
+
+The installation creates only these user-level entries:
+
+```text
+~/.local/bin/discord
+~/.local/share/applications/discord.desktop
+```
+
+The local desktop entry overrides Discord's system entry without modifying `/usr/bin/discord` or `/usr/share/applications/discord.desktop`, so normal Discord package updates do not overwrite the guard. Keep this repository and its `dist` build at the same location while using the development injection.
+
+Remove the guard with:
+
+```bash
+pnpm uninstallUpdateGuard
+```
+
 ### Uninstall
 
 From the repository:
@@ -220,16 +277,20 @@ pnpm install --frozen-lockfile
 pnpm testTsc
 pnpm lint
 pnpm lint-styles
+pnpm testProfilePicker
+pnpm testUpdateGuard
 pnpm build
 pnpm buildWeb --skip-extension
 pnpm test
 ```
 
-It has also been manually tested on Debian with multiple persistent Discord accounts.
+The profile manager has been manually tested on Debian with multiple persistent Discord accounts. The startup chooser still requires the manual platform matrix described in the implementation handoff.
 
 ## Current limitations
 
 * Windows and macOS still require manual end-to-end validation.
+* The startup chooser still requires manual end-to-end validation on all platforms.
+* macOS Finder or Dock launches may activate an existing application process instead of starting a new chooser process; direct executable launches require separate validation.
 * Profile directories must currently be removed manually.
 * Multiple profiles may share the same Discord taskbar or dock identity.
 * Discord updates could change internal data-directory initialization behavior.

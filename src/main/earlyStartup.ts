@@ -15,13 +15,20 @@ export const ORIGINAL_ELECTRON_USER_DATA_DIR = app.getPath("userData");
 export const ORIGINAL_DISCORD_USER_DATA_DIR = ORIGINAL_DISCORD_USER_DATA_ROOT
     ? join(ORIGINAL_DISCORD_USER_DATA_ROOT, basename(ORIGINAL_ELECTRON_USER_DATA_DIR))
     : ORIGINAL_ELECTRON_USER_DATA_DIR;
+export const SHARED_VENCORD_DATA_DIR = process.env.VENCORD_USER_DATA_DIR ?? (
+    ORIGINAL_DISCORD_USER_DATA_ROOT
+        ? join(ORIGINAL_DISCORD_USER_DATA_ROOT, "..", "VencordData")
+        : join(ORIGINAL_DISCORD_USER_DATA_DIR, "..", "Vencord")
+);
 export let CURRENT_DISCORD_PROFILE: string | null = null;
 
-if (IS_DISCORD_DESKTOP) {
+export function configureEarlyStartup(argv: readonly string[]): void {
+    if (!IS_DISCORD_DESKTOP) return;
+
     let profile: string | null;
 
     try {
-        profile = parseProfileArgument(process.argv);
+        profile = parseProfileArgument(argv);
         CURRENT_DISCORD_PROFILE = profile;
     } catch (error) {
         if (!(error instanceof InvalidProfileArgumentError)) throw error;

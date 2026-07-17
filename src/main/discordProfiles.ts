@@ -6,13 +6,12 @@
 
 import { DiscordProfileErrorCode, DiscordProfileResult, DiscordProfilesState, InvalidProfileArgumentError, profileNamesCollide, validateProfileName } from "@shared/DiscordProfiles";
 import { IpcEvents } from "@shared/IpcEvents";
-import { spawn } from "child_process";
-import { app, ipcMain, shell } from "electron";
-import { lstat, mkdir, readdir, rmdir } from "fs/promises";
-import { dirname } from "path";
+import { ipcMain, shell } from "electron";
+import { mkdir, rmdir } from "fs/promises";
 
-import { CURRENT_DISCORD_PROFILE, ORIGINAL_DISCORD_USER_DATA_DIR, ORIGINAL_DISCORD_USER_DATA_ROOT } from "./earlyStartup";
-import { createProfileLaunchEnvironment, deriveProfilePaths, parseProfileDirectoryName } from "./multiInstance";
+import { getDiscordProfiles, launchDiscordProfile, launchProfilePicker } from "./discordProfileOperations";
+import { CURRENT_DISCORD_PROFILE, ORIGINAL_DISCORD_USER_DATA_DIR } from "./earlyStartup";
+import { deriveProfilePaths } from "./multiInstance";
 
 class ProfileManagerError extends Error {
     constructor(public code: DiscordProfileErrorCode, message: string) {
@@ -63,57 +62,7 @@ function validatedProfileName(profile: unknown): string {
     }
 }
 
-function compareProfileNames(first: string, second: string): number {
-    const normalizedFirst = first.toLowerCase();
-    const normalizedSecond = second.toLowerCase();
-
-    if (normalizedFirst < normalizedSecond) return -1;
-    if (normalizedFirst > normalizedSecond) return 1;
-    return first < second ? -1 : first > second ? 1 : 0;
-}
-
-async function getDiscordProfiles(): Promise<string[]> {
-    const profileParent = dirname(ORIGINAL_DISCORD_USER_DATA_DIR);
-    let entries;
-
-    try {
-        entries = await readdir(profileParent, { withFileTypes: true });
-    } catch (error: any) {
-        if (error?.code === "ENOENT") return [];
-        throw error;
-    }
-
-    const profiles: string[] = [];
-
-    for (const entry of entries) {
-        if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
-
-        const profile = parseProfileDirectoryName(ORIGINAL_DISCORD_USER_DATA_DIR, entry.name);
-        if (profile == null) continue;
-
-        const paths = deriveProfilePaths(ORIGINAL_DISCORD_USER_DATA_DIR, profile);
-
-        try {
-            const [rootInfo, userDataInfo] = await Promise.all([
-                lstat(paths.root),
-                lstat(paths.userData)
-            ]);
-
-            if (
-                rootInfo.isSymbolicLink() || !rootInfo.isDirectory()
-                || userDataInfo.isSymbolicLink() || !userDataInfo.isDirectory()
-            ) continue;
-        } catch {
-            continue;
-        }
-
-        profiles.push(profile);
-    }
-
-    return profiles.sort(compareProfileNames);
-}
-
-async function requireExistingProfile(profile: unknown): Promise<string> {
+async function requireManagedExistingProfile(profile: unknown): Promise<string> {
     const validatedProfile = validatedProfileName(profile);
     const profiles = await getDiscordProfiles();
 
@@ -149,29 +98,8 @@ async function createDiscordProfile(profile: unknown): Promise<void> {
     }
 }
 
-async function launchDiscordProfile(profile: unknown): Promise<void> {
-    const validatedProfile = await requireExistingProfile(profile);
-    const executable = app.getPath("exe");
-    const environment = createProfileLaunchEnvironment(process.env, ORIGINAL_DISCORD_USER_DATA_ROOT);
-    const child = spawn(executable, [`--vencord-profile=${validatedProfile}`], {
-        cwd: dirname(executable),
-        detached: true,
-        env: environment,
-        shell: false,
-        stdio: "ignore",
-        windowsHide: true
-    });
-
-    await new Promise<void>((resolve, reject) => {
-        child.once("error", reject);
-        child.once("spawn", resolve);
-    });
-
-    child.unref();
-}
-
 async function openDiscordProfileFolder(profile: unknown): Promise<void> {
-    const validatedProfile = await requireExistingProfile(profile);
+    const validatedProfile = await requireManagedExistingProfile(profile);
     const { userData } = deriveProfilePaths(ORIGINAL_DISCORD_USER_DATA_DIR, validatedProfile);
     const error = await shell.openPath(userData);
 
@@ -201,10 +129,17 @@ if (IS_DISCORD_DESKTOP) {
     );
 
     ipcMain.handle(IpcEvents.LAUNCH_DISCORD_PROFILE, (_, profile) =>
-        safely("LAUNCH_FAILED", "Failed to open the Discord profile.", () => launchDiscordProfile(profile))
+        safely("LAUNCH_FAILED", "Failed to open the Discord profile.", async () => {
+            const validatedProfile = await requireManagedExistingProfile(profile);
+            await launchDiscordProfile(validatedProfile);
+        })
     );
 
     ipcMain.handle(IpcEvents.OPEN_DISCORD_PROFILE_FOLDER, (_, profile) =>
         safely("OPEN_FOLDER_FAILED", "Failed to open the Discord profile folder.", () => openDiscordProfileFolder(profile))
+    );
+
+    ipcMain.handle(IpcEvents.OPEN_DISCORD_PROFILE_PICKER, () =>
+        safely("OPEN_PICKER_FAILED", "Failed to open the Discord profile chooser.", launchProfilePicker)
     );
 }

@@ -52,7 +52,7 @@ type KeysOfType<Object, Type> = {
 }[keyof Object];
 
 function Switches() {
-    const settings = useSettings(["useQuickCss", "enableReactDevtools", "multiInstance", "frameless", "winNativeTitleBar", "transparent", "winCtrlQ", "disableMinSize"]);
+    const settings = useSettings(["useQuickCss", "enableReactDevtools", "multiInstance", "showProfilePickerOnStartup", "frameless", "winNativeTitleBar", "transparent", "winCtrlQ", "disableMinSize"]);
 
     const Switches = [
         {
@@ -68,6 +68,12 @@ function Switches() {
             key: "multiInstance",
             title: "Allow multiple Discord instances",
             description: "Allows multiple Discord processes to use the same Discord profile. For separate accounts, launch Discord with --vencord-profile=<name>.",
+            restartRequired: true
+        },
+        IS_DISCORD_DESKTOP && {
+            key: "showProfilePickerOnStartup",
+            title: "Show profile chooser on startup",
+            description: "Choose which isolated Discord profile to open before Discord starts.",
             restartRequired: true
         },
         !IS_WEB && (!IS_DISCORD_DESKTOP || !IS_WINDOWS ? {

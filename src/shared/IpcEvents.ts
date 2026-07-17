@@ -40,6 +40,7 @@ export const enum IpcEvents {
     CREATE_DISCORD_PROFILE = "VencordCreateDiscordProfile",
     LAUNCH_DISCORD_PROFILE = "VencordLaunchDiscordProfile",
     OPEN_DISCORD_PROFILE_FOLDER = "VencordOpenDiscordProfileFolder",
+    OPEN_DISCORD_PROFILE_PICKER = "VencordOpenDiscordProfilePicker",
 
     GET_UPDATES = "VencordGetUpdates",
     GET_REPO = "VencordGetRepo",

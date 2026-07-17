@@ -166,6 +166,18 @@ const buildConfigs = ([
             IS_VESKTOP: "false"
         }
     },
+    {
+        ...nodeCommonOpts,
+        entryPoints: ["src/main/profilePickerPreload.ts"],
+        outfile: "dist/profilePickerPreload.js",
+        footer: { js: "//# sourceURL=file:///VencordProfilePickerPreload\n" + sourceMapFooter("profilePickerPreload") },
+        sourcemap,
+        define: {
+            ...defines,
+            IS_DISCORD_DESKTOP: "true",
+            IS_VESKTOP: "false"
+        }
+    },
 
     // Vencord Desktop main & renderer & preload
     {
